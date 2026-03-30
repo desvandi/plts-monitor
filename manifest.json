@@ -1,0 +1,27 @@
+{
+    "name": "PLTS Monitor v5.0",
+    "short_name": "PLTS Monitor",
+    "description": "Sistem Monitoring PLTS dengan Baterai LiFePO4 16S 300Ah",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#f0fdf4",
+    "theme_color": "#10b981",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect fill='%2310b981' width='192' height='192' rx='32'/%3E%3Ctext x='96' y='130' text-anchor='middle' fill='white' font-size='100'%3E%E2%98%80%EF%B8%8F%3C/text%3E%3C/svg%3E",
+            "sizes": "192x192",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect fill='%2310b981' width='512' height='512' rx='64'/%3E%3Ctext x='256' y='340' text-anchor='middle' fill='white' font-size='280'%3E%E2%98%80%EF%B8%8F%3C/text%3E%3C/svg%3E",
+            "sizes": "512x512",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": ["utilities", "productivity"],
+    "lang": "id",
+    "dir": "ltr"
+}
