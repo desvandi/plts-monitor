@@ -598,7 +598,7 @@
                 <div class="page-header">
                     <h2 class="page-title">Dashboard</h2>
                     <div class="page-actions">
-                        <div class="connection-status online" id="connectionStatus"><span class="status-dot"></span><span>Online</span></div>
+                        <div class="connection-status offline" id="connectionStatus"><span class="status-dot"></span><span>Offline</span></div>
                         <button class="btn btn-secondary btn-icon" onclick="toggleTheme()"><i class="fas fa-moon" id="themeIcon"></i></button>
                         <button class="btn btn-secondary btn-sm" onclick="refreshData()"><i class="fas fa-sync"></i><span>Refresh</span></button>
                         <button class="btn btn-primary btn-sm" onclick="exportData()"><i class="fas fa-download"></i><span>Export</span></button>
@@ -657,22 +657,23 @@
                         </div>
                     </div>
                 </div>
-                <div class="grid-2">
-                    <div class="chart-container">
-                        <div class="chart-header">
-                            <h3 class="card-title">SOC & Kapasitas</h3>
-                            <div class="chart-tabs">
-                                <button class="chart-tab active" onclick="changeChartPeriod(1)">1J</button>
-                                <button class="chart-tab" onclick="changeChartPeriod(6)">6J</button>
-                                <button class="chart-tab" onclick="changeChartPeriod(24)">24J</button>
-                            </div>
+                <!-- SOC Chart - Full Width -->
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-chart-line"></i> SOC & Kapasitas</h3>
+                        <div class="chart-tabs">
+                            <button class="chart-tab active" onclick="changeChartPeriod(1)">1J</button>
+                            <button class="chart-tab" onclick="changeChartPeriod(6)">6J</button>
+                            <button class="chart-tab" onclick="changeChartPeriod(24)">24J</button>
                         </div>
-                        <div class="chart-body"><canvas id="socChart"></canvas></div>
                     </div>
-                    <div class="chart-container">
-                        <div class="chart-header"><h3 class="card-title">Daya</h3></div>
-                        <div class="chart-body"><canvas id="powerChart"></canvas></div>
-                    </div>
+                    <div style="height: 280px; padding: 1rem;"><canvas id="socChart"></canvas></div>
+                </div>
+                
+                <!-- Power Chart - Full Width -->
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header"><h3 class="card-title"><i class="fas fa-bolt"></i> Daya</h3></div>
+                    <div style="height: 280px; padding: 1rem;"><canvas id="powerChart"></canvas></div>
                 </div>
             </div>
             
@@ -748,14 +749,21 @@
                         <div class="card-header"><h3 class="card-title"><i class="fas fa-thermometer-half"></i> Suhu</h3></div>
                         <div class="card-body">
                             <div class="gauge-wrapper">
-                                <div class="gauge">
-                                    <svg viewBox="0 0 180 100">
-                                        <path class="gauge-bg-path" d="M 20 90 A 70 70 0 0 1 160 90"/>
-                                        <path class="gauge-fill-path" id="tempGauge" d="M 20 90 A 70 70 0 0 1 160 90" stroke="#ec4899" stroke-dasharray="220" stroke-dashoffset="220"/>
+                                <div class="gauge" style="width: 200px; height: 110px;">
+                                    <svg viewBox="0 0 200 110" style="width: 100%; height: 100%;">
+                                        <!-- Background arc -->
+                                        <path class="gauge-bg-path" d="M 20 100 A 80 80 0 0 1 180 100" stroke-width="12" fill="none"/>
+                                        <!-- Value arc -->
+                                        <path class="gauge-fill-path" id="tempGauge" d="M 20 100 A 80 80 0 0 1 180 100" stroke="#ec4899" stroke-width="12" fill="none" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="251.2" style="transform: rotate(-90deg); transform-origin: center;"/>
                                     </svg>
-                                    <div class="gauge-value-text" id="tempValue">--°C</div>
-                                    <div class="gauge-label-text">Suhu Ruangan</div>
+                                    <div class="gauge-value-text" id="tempValue" style="bottom: 5px;">--°C</div>
+                                    <div class="gauge-label-text" style="bottom: -25px;">Suhu Ruangan</div>
                                 </div>
+                            </div>
+                            <!-- Temperature status indicator -->
+                            <div style="text-align: center; margin-top: 1.5rem; padding: 0.75rem; background: var(--bg-input); border-radius: var(--radius);">
+                                <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.25rem;">Status</div>
+                                <div id="tempStatus" style="font-weight: 600; color: var(--text-secondary);">--</div>
                             </div>
                         </div>
                     </div>
@@ -763,14 +771,21 @@
                         <div class="card-header"><h3 class="card-title"><i class="fas fa-tint"></i> Kelembaban</h3></div>
                         <div class="card-body">
                             <div class="gauge-wrapper">
-                                <div class="gauge">
-                                    <svg viewBox="0 0 180 100">
-                                        <path class="gauge-bg-path" d="M 20 90 A 70 70 0 0 1 160 90"/>
-                                        <path class="gauge-fill-path" id="humGauge" d="M 20 90 A 70 70 0 0 1 160 90" stroke="#14b8a6" stroke-dasharray="220" stroke-dashoffset="220"/>
+                                <div class="gauge" style="width: 200px; height: 110px;">
+                                    <svg viewBox="0 0 200 110" style="width: 100%; height: 100%;">
+                                        <!-- Background arc -->
+                                        <path class="gauge-bg-path" d="M 20 100 A 80 80 0 0 1 180 100" stroke-width="12" fill="none"/>
+                                        <!-- Value arc -->
+                                        <path class="gauge-fill-path" id="humGauge" d="M 20 100 A 80 80 0 0 1 180 100" stroke="#14b8a6" stroke-width="12" fill="none" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="251.2" style="transform: rotate(-90deg); transform-origin: center;"/>
                                     </svg>
-                                    <div class="gauge-value-text" id="humValue">--%</div>
-                                    <div class="gauge-label-text">Kelembaban</div>
+                                    <div class="gauge-value-text" id="humValue" style="bottom: 5px;">--%</div>
+                                    <div class="gauge-label-text" style="bottom: -25px;">Kelembaban</div>
                                 </div>
+                            </div>
+                            <!-- Humidity status indicator -->
+                            <div style="text-align: center; margin-top: 1.5rem; padding: 0.75rem; background: var(--bg-input); border-radius: var(--radius);">
+                                <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.25rem;">Status</div>
+                                <div id="humStatus" style="font-weight: 600; color: var(--text-secondary);">--</div>
                             </div>
                         </div>
                     </div>
@@ -1134,13 +1149,15 @@
     
     <script>
         // ==================== CONFIGURATION ====================
+        // Ganti dengan URL Google Apps Script Anda
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyAYro7amo3qvRe29kTt71qxNsAE8ewDgtXbR5eLoQnmRKVGjI8tA9yev6gPQfGklFy/exec';
         const REFRESH_INTERVAL = 15000;
         
-        // Calibration factors
-        let voltageCalibrationFactor = 0.199;
-        let powerBatteryCalibration = 0.202;
-        let powerLoadCalibration = 0.096;
+        // Calibration factors (optional - set to 1 if data already calibrated in ESP32)
+        // Jika data dari GAppScript sudah dikalibrasi, biarkan nilai = 1
+        let voltageCalibrationFactor = 1.0;
+        let powerBatteryCalibration = 1.0;
+        let powerLoadCalibration = 1.0;
         
         // LiFePO4 16S 300Ah Configuration
         const BATTERY_CONFIG = {
@@ -1167,7 +1184,8 @@
         const ALERT_COOLDOWN = 60000;
         let notificationPermission = 'default';
         
-        // Calibration helpers
+        // Calibration helpers - apply calibration factor if needed
+        // Note: Data from GAppScript should already be calibrated from ESP32
         function getCalibratedVoltage(raw) { return (raw || 0) * voltageCalibrationFactor; }
         function getCalibratedPowerBattery(raw) { return (raw || 0) * powerBatteryCalibration; }
         function getCalibratedPowerLoad(raw) { return (raw || 0) * powerLoadCalibration; }
@@ -1822,11 +1840,70 @@
         
         function updateEnvironment(data) {
             const temp = data.temperature || 0;
-            document.getElementById('tempGauge').setAttribute('stroke-dashoffset', Math.max(0, 220 - (temp / 60 * 220)));
-            document.getElementById('tempValue').textContent = `${temp.toFixed(1)}°C`;
             const hum = data.humidity || 0;
-            document.getElementById('humGauge').setAttribute('stroke-dashoffset', Math.max(0, 220 - (hum / 100 * 220)));
-            document.getElementById('humValue').textContent = `${hum.toFixed(0)}%`;
+            
+            // Arc length for semi-circle: π * radius = 3.14159 * 80 = 251.2
+            const arcLength = 251.2;
+            
+            // Update temperature gauge (0-60°C range)
+            const tempOffset = Math.max(0, arcLength - (temp / 60 * arcLength));
+            const tempGauge = document.getElementById('tempGauge');
+            if (tempGauge) {
+                tempGauge.setAttribute('stroke-dashoffset', tempOffset);
+            }
+            const tempValueEl = document.getElementById('tempValue');
+            if (tempValueEl) {
+                tempValueEl.textContent = `${temp.toFixed(1)}°C`;
+            }
+            
+            // Temperature status
+            const tempStatus = document.getElementById('tempStatus');
+            if (tempStatus) {
+                let statusText = 'Normal';
+                let statusColor = '#10b981';
+                if (temp < 20) {
+                    statusText = 'Dingin';
+                    statusColor = '#3b82f6';
+                } else if (temp > 45) {
+                    statusText = 'Panas!';
+                    statusColor = '#ef4444';
+                } else if (temp > 35) {
+                    statusText = 'Hangat';
+                    statusColor = '#f59e0b';
+                }
+                tempStatus.textContent = statusText;
+                tempStatus.style.color = statusColor;
+            }
+            
+            // Update humidity gauge (0-100% range)
+            const humOffset = Math.max(0, arcLength - (hum / 100 * arcLength));
+            const humGauge = document.getElementById('humGauge');
+            if (humGauge) {
+                humGauge.setAttribute('stroke-dashoffset', humOffset);
+            }
+            const humValueEl = document.getElementById('humValue');
+            if (humValueEl) {
+                humValueEl.textContent = `${hum.toFixed(0)}%`;
+            }
+            
+            // Humidity status
+            const humStatus = document.getElementById('humStatus');
+            if (humStatus) {
+                let statusText = 'Normal';
+                let statusColor = '#10b981';
+                if (hum < 30) {
+                    statusText = 'Kering';
+                    statusColor = '#f59e0b';
+                } else if (hum > 80) {
+                    statusText = 'Lembab!';
+                    statusColor = '#3b82f6';
+                } else if (hum > 70) {
+                    statusText = 'Cukup Lembab';
+                    statusColor = '#14b8a6';
+                }
+                humStatus.textContent = statusText;
+                humStatus.style.color = statusColor;
+            }
         }
         
         function formatTime(hours) {
