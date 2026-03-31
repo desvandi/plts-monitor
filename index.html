@@ -8,10 +8,10 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PLTS Monitor">
-    <meta name="description" content="PLTS Monitor v5.0 - PT. MAL KONTAINER dengan Baterai LiFePO4 16S 300Ah - 15.36 kWh">
+    <meta name="description" content="Sistem Monitoring PLTS - PT. MAL CONTAINER dengan Baterai LiFePO4 16S 300Ah - 15.36 kWh">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect fill='%2310b981' width='180' height='180' rx='30'/%3E%3Ctext x='90' y='120' text-anchor='middle' fill='white' font-size='90'%3E%E2%98%80%EF%B8%8F%3C/text%3E%3C/svg%3E">
-    <title>PLTS Monitor v5.0 - PT. MAL KONTAINER</title>
+    <title>PLTS Monitor v5.0 - PT. MAL CONTAINER</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -568,7 +568,7 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="logo-icon"><i class="fas fa-solar-panel"></i></div>
-                <div class="logo-text"><h1>PLTS Monitor v5.0</h1><span>PT. MAL KONTAINER</span></div>
+                <div class="logo-text"><h1>PLTS Monitor</h1><span>PT. MAL CONTAINER</span></div>
             </div>
             <nav>
                 <div class="nav-section">
@@ -598,7 +598,13 @@
                 <div class="page-header">
                     <h2 class="page-title">Dashboard</h2>
                     <div class="page-actions">
-                        <div class="connection-status offline" id="connectionStatus"><span class="status-dot"></span><span>Offline</span></div>
+                        <div class="connection-status offline" id="connectionStatus" title="Status modul ESP32">
+                            <span class="status-dot"></span>
+                            <span>Offline</span>
+                        </div>
+                        <div id="dataAgeDisplay" style="font-size: 0.7rem; color: var(--text-muted); padding: 0.4rem 0.75rem; background: var(--bg-input); border-radius: var(--radius);">
+                            <i class="fas fa-clock"></i> Data: --
+                        </div>
                         <button class="btn btn-secondary btn-icon" onclick="toggleTheme()"><i class="fas fa-moon" id="themeIcon"></i></button>
                         <button class="btn btn-secondary btn-sm" onclick="refreshData()"><i class="fas fa-sync"></i><span>Refresh</span></button>
                         <button class="btn btn-primary btn-sm" onclick="exportData()"><i class="fas fa-download"></i><span>Export</span></button>
@@ -868,8 +874,11 @@
                         </div>
                         <div class="setting-item">
                             <label>URL Google Apps Script</label>
-                            <div class="description">Endpoint URL untuk komunikasi data</div>
+                            <div class="description">URL untuk dashboard web ini. <strong>Tidak mengubah firmware ESP32.</strong></div>
                             <input type="text" id="settingScriptUrl" placeholder="https://script.google.com/macros/s/...">
+                            <small style="color: var(--warning); margin-top: 0.25rem; display: block;">
+                                <i class="fas fa-info-circle"></i> Untuk mengubah URL di ESP32, perlu update firmware
+                            </small>
                         </div>
                         <div class="setting-item">
                             <label>Spreadsheet ID</label>
@@ -885,13 +894,13 @@
                     <div class="settings-grid">
                         <div class="setting-item">
                             <label>SSID WiFi</label>
-                            <div class="description">Nama jaringan WiFi</div>
-                            <input type="text" id="settingWifiSSID" value="4G-UFI-2930">
+                            <div class="description">Nama jaringan WiFi (dari firmware)</div>
+                            <input type="text" id="settingWifiSSID" readonly style="background: var(--bg-input); opacity: 0.7;">
                         </div>
                         <div class="setting-item">
                             <label>Password WiFi</label>
-                            <div class="description">Password jaringan WiFi</div>
-                            <input type="password" id="settingWifiPassword" value="1234567890">
+                            <div class="description">Password jaringan WiFi (dari firmware)</div>
+                            <input type="password" id="settingWifiPassword" readonly style="background: var(--bg-input); opacity: 0.7;">
                         </div>
                     </div>
                 </div>
@@ -1149,8 +1158,9 @@
     
     <script>
         // ==================== CONFIGURATION ====================
-        // Ganti dengan URL Google Apps Script Anda
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyAYro7amo3qvRe29kTt71qxNsAE8ewDgtXbR5eLoQnmRKVGjI8tA9yev6gPQfGklFy/exec';
+        // Script URL - bisa diubah dari pengaturan dan disimpan ke localStorage
+        const DEFAULT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyAYro7amo3qvRe29kTt71qxNsAE8ewDgtXbR5eLoQnmRKVGjI8tA9yev6gPQfGklFy/exec';
+        let SCRIPT_URL = localStorage.getItem('plts_script_url') || DEFAULT_SCRIPT_URL;
         const REFRESH_INTERVAL = 15000;
         
         // Calibration factors (optional - set to 1 if data already calibrated in ESP32)
@@ -1184,12 +1194,12 @@
         const ALERT_COOLDOWN = 60000;
         let notificationPermission = 'default';
         
-        // Connection monitoring - timeout detection
-        let lastSuccessfulFetchTime = 0;      // Timestamp fetch berhasil terakhir
-        let lastDataHash = '';                 // Hash data terakhir untuk deteksi perubahan
-        const OFFLINE_TIMEOUT = 17000;         // 17 detik - batas waktu sebelum dianggap offline
-        let connectionCheckInterval = null;    // Interval untuk cek koneksi
-        let isOnline = false;                  // Status koneksi saat ini
+        // Connection monitoring - TRUE online/offline detection
+        // Modul dianggap ONLINE jika data timestamp < 60 detik yang lalu
+        let lastDataTimestamp = 0;           // Timestamp dari modul ESP32 (dari GAppScript)
+        let isModuleOnline = false;          // Status modul ESP32 (berdasarkan timestamp data)
+        let lastFetchSuccess = false;        // Status fetch terakhir ke GAppScript
+        const MODULE_OFFLINE_THRESHOLD = 60000; // 60 detik - jika data lebih tua dari ini = OFFLINE
         
         // Calibration helpers - apply calibration factor if needed
         // Note: Data from GAppScript should already be calibrated from ESP32
@@ -1207,70 +1217,18 @@
         // ==================== INITIALIZATION ====================
         document.addEventListener('DOMContentLoaded', function() {
             initTheme();
+            initScriptUrl();  // Load saved Script URL
             initCharts();
             fetchData();
             loadSettings();
             setInterval(fetchData, REFRESH_INTERVAL);
             checkNotificationPermission();
             loadCalibrationFromStorage();
-            startConnectionMonitor();
         });
         
         // ==================== CONNECTION MONITORING ====================
-        function startConnectionMonitor() {
-            // Cek koneksi setiap 2 detik
-            if (connectionCheckInterval) {
-                clearInterval(connectionCheckInterval);
-            }
-            connectionCheckInterval = setInterval(checkConnectionStatus, 2000);
-        }
-        
-        function checkConnectionStatus() {
-            const now = Date.now();
-            const timeSinceLastFetch = now - lastSuccessfulFetchTime;
-            
-            // Jika sudah lebih dari OFFLINE_TIMEOUT (17 detik) tanpa data baru
-            if (lastSuccessfulFetchTime > 0 && timeSinceLastFetch > OFFLINE_TIMEOUT) {
-                if (isOnline) {
-                    isOnline = false;
-                    updateConnectionStatus(false);
-                    showToast('Koneksi Terputus', `Tidak ada data baru selama ${Math.floor(timeSinceLastFetch/1000)} detik`, 'warning');
-                }
-            }
-        }
-        
-        function generateDataHash(data) {
-            // Buat hash sederhana dari data penting untuk mendeteksi perubahan
-            if (!data) return '';
-            const hashString = [
-                data.voltageBattery || 0,
-                data.currentBattery || 0,
-                data.powerBattery || 0,
-                data.soc || 0,
-                data.timestamp || ''
-            ].join('|');
-            return hashString;
-        }
-        
-        function updateLastFetchTime(data) {
-            const now = Date.now();
-            const newHash = generateDataHash(data);
-            
-            // Cek apakah data benar-benar berubah
-            const dataChanged = (newHash !== lastDataHash);
-            
-            if (dataChanged) {
-                lastSuccessfulFetchTime = now;
-                lastDataHash = newHash;
-                
-                if (!isOnline) {
-                    isOnline = true;
-                    updateConnectionStatus(true);
-                }
-            }
-            
-            return dataChanged;
-        }
+        // Check if module is truly online based on data timestamp
+        // Module dianggap OFFLINE jika data terakhir > 60 detik yang lalu
         
         function loadCalibrationFromStorage() {
             const saved = localStorage.getItem('voltageCalibrationFactor');
@@ -1342,9 +1300,22 @@
                     config = latest.config || {};
                     alertThresholds = latest.alerts || {};
                     
-                    // Update fetch time dan cek apakah data berubah
-                    // Status online akan diupdate oleh connection monitor
-                    updateLastFetchTime(latest);
+                    // Check if module is truly online based on data timestamp
+                    // Data dari ESP32 harus punya timestamp
+                    const dataTimestamp = latest.timestamp || latest.dataTimestamp || latest.lastUpdate;
+                    if (dataTimestamp) {
+                        lastDataTimestamp = new Date(dataTimestamp).getTime();
+                        const moduleOnline = checkModuleOnline(dataTimestamp);
+                        updateConnectionStatus(true, moduleOnline);
+                        
+                        if (!moduleOnline && isModuleOnline) {
+                            // Baru saja offline
+                            showToast('Modul Offline', 'Data dari modul sudah tua (> 60 detik)', 'warning');
+                        }
+                    } else {
+                        // Tidak ada timestamp, gunakan fetch success saja
+                        updateConnectionStatus(true);
+                    }
                     
                     updateDashboard(latest);
                     checkAlerts(latest);
@@ -1353,15 +1324,11 @@
                     historyData = history.data;
                     updateAllCharts(historyData);
                 }
-                // Jangan set online di sini - biarkan connection monitor yang menentukan
-                // berdasarkan apakah data berubah atau tidak
+                lastFetchSuccess = true;
             } catch (error) {
                 console.error('Fetch error:', error);
-                // Network error - langsung set offline
-                if (isOnline) {
-                    isOnline = false;
-                    updateConnectionStatus(false);
-                }
+                lastFetchSuccess = false;
+                updateConnectionStatus(false);
                 showToast('Koneksi gagal', 'Tidak dapat mengambil data', 'danger');
             }
         }
@@ -2472,7 +2439,8 @@
         function populateSettingsForm() {
             document.getElementById('settingSendInterval').value = config.sendInterval || 15000;
             document.getElementById('settingMaxRows').value = config.maxRows || 30000;
-            document.getElementById('settingScriptUrl').value = config.scriptUrl || '';
+            // Script URL dari localStorage (bukan dari server)
+            document.getElementById('settingScriptUrl').value = SCRIPT_URL;
             document.getElementById('settingSpreadsheetId').value = config.spreadsheetId || '';
             document.getElementById('settingWifiSSID').value = config.wifiSSID || '4G-UFI-2930';
             document.getElementById('settingWifiPassword').value = config.wifiPassword || '1234567890';
@@ -2485,14 +2453,13 @@
             document.getElementById('settingVoltageOffset').value = config.voltageOffset || 0;
             document.getElementById('settingAcsLoadOffset').value = config.acs712LoadOffset || 0;
             document.getElementById('settingAcsLoadScale').value = config.acs712LoadScale || 1;
-            document.getElementById('settingAcsGenOffset').value = config.acs712GenOffset || 0;
-            document.getElementById('settingAcsGenScale').value = config.acs712GenScale || 1;
             document.getElementById('settingTempOffset').value = config.tempOffset || 0;
             document.getElementById('settingHumidityOffset').value = config.humidityOffset || 0;
             document.getElementById('settingSocWarning').value = alertThresholds.socWarning || 20;
             document.getElementById('settingSocCritical').value = alertThresholds.socCritical || 10;
-            document.getElementById('settingVoltageLow').value = alertThresholds.voltageLow || 22;
-            document.getElementById('settingVoltageHigh').value = alertThresholds.voltageHigh || 28.5;
+            // Updated thresholds for 16S battery
+            document.getElementById('settingVoltageLow').value = alertThresholds.voltageLow || 44;
+            document.getElementById('settingVoltageHigh').value = alertThresholds.voltageHigh || 57;
             document.getElementById('settingCurrentOverload').value = alertThresholds.currentOverload || 90;
             document.getElementById('settingTempWarning').value = alertThresholds.tempWarning || 45;
             document.getElementById('settingTempCritical').value = alertThresholds.tempCritical || 55;
@@ -2511,6 +2478,16 @@
         }
         
         async function saveAllSettings() {
+            // Save Script URL to localStorage if changed
+            const newScriptUrl = document.getElementById('settingScriptUrl').value.trim();
+            if (newScriptUrl && newScriptUrl !== SCRIPT_URL) {
+                localStorage.setItem('plts_script_url', newScriptUrl);
+                SCRIPT_URL = newScriptUrl;
+                showToast('URL Diperbarui', 'Script URL disimpan. Memuat data dengan URL baru...', 'success');
+                // Fetch data dengan URL baru
+                setTimeout(() => fetchData(), 1000);
+            }
+            
             const settings = {
                 action: 'updateConfig',
                 send_interval: parseInt(document.getElementById('settingSendInterval').value),
@@ -2558,10 +2535,92 @@
         }
         
         // ==================== UTILITIES ====================
-        function updateConnectionStatus(online) {
+        // Update connection status based on module timestamp
+        // Online = data dari modul ESP32 masih fresh (< 60 detik)
+        // Offline = data sudah tua atau fetch gagal
+        function updateConnectionStatus(online, moduleStatus = null) {
             const status = document.getElementById('connectionStatus');
-            if (online) { status.className = 'connection-status online'; status.innerHTML = '<span class="status-dot"></span><span>Online</span>'; }
-            else { status.className = 'connection-status offline'; status.innerHTML = '<span class="status-dot"></span><span>Offline</span>'; }
+            
+            if (moduleStatus !== null) {
+                // Jika ada info module status (dari timestamp data)
+                if (moduleStatus) {
+                    status.className = 'connection-status online';
+                    status.innerHTML = '<span class="status-dot"></span><span>Online</span>';
+                    isModuleOnline = true;
+                } else {
+                    status.className = 'connection-status offline';
+                    status.innerHTML = '<span class="status-dot"></span><span>Offline</span>';
+                    isModuleOnline = false;
+                }
+            } else if (online) {
+                // Fallback: hanya berdasarkan fetch berhasil
+                status.className = 'connection-status online';
+                status.innerHTML = '<span class="status-dot"></span><span>Online</span>';
+            } else {
+                status.className = 'connection-status offline';
+                status.innerHTML = '<span class="status-dot"></span><span>Offline</span>';
+            }
+        }
+        
+        // Check if module is online based on data timestamp
+        function checkModuleOnline(dataTimestamp) {
+            if (!dataTimestamp) return false;
+            
+            const now = Date.now();
+            const dataTime = new Date(dataTimestamp).getTime();
+            const ageMs = now - dataTime;
+            
+            // Update data age display
+            updateDataAgeDisplay(ageMs);
+            
+            // Module dianggap online jika data < 60 detik yang lalu
+            return ageMs < MODULE_OFFLINE_THRESHOLD;
+        }
+        
+        // Update data age display
+        function updateDataAgeDisplay(ageMs) {
+            const display = document.getElementById('dataAgeDisplay');
+            if (!display) return;
+            
+            const ageSec = Math.floor(ageMs / 1000);
+            const ageMin = Math.floor(ageSec / 60);
+            const ageHour = Math.floor(ageMin / 60);
+            
+            let ageText, color;
+            
+            if (ageSec < 60) {
+                ageText = `${ageSec} dtk lalu`;
+                color = '#10b981'; // green - fresh
+            } else if (ageMin < 5) {
+                ageText = `${ageMin} menit lalu`;
+                color = '#22c55e'; // green
+            } else if (ageMin < 15) {
+                ageText = `${ageMin} menit lalu`;
+                color = '#f59e0b'; // yellow
+            } else if (ageMin < 60) {
+                ageText = `${ageMin} menit lalu`;
+                color = '#f97316'; // orange
+            } else {
+                ageText = `${ageHour} jam lalu`;
+                color = '#ef4444'; // red - stale
+            }
+            
+            display.innerHTML = `<i class="fas fa-clock"></i> Data: ${ageText}`;
+            display.style.color = color;
+        }
+        
+        // Initialize script URL from localStorage
+        function initScriptUrl() {
+            const savedUrl = localStorage.getItem('plts_script_url');
+            if (savedUrl) {
+                SCRIPT_URL = savedUrl;
+                console.log('Using saved Script URL:', SCRIPT_URL);
+            }
+            // Update input field
+            const input = document.getElementById('settingScriptUrl');
+            if (input) {
+                input.value = SCRIPT_URL;
+            }
         }
         
         function showToast(title, message, type = 'info') {
